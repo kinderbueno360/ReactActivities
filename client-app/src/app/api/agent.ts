@@ -1,5 +1,4 @@
 import axios, { AxiosResponse } from 'axios';
-import { resolve } from 'dns';
 import { Activity } from '../models/activity';
 
 const sleep = (delay: number) => {
@@ -12,7 +11,7 @@ axios.defaults.baseURL = 'https://localhost:5001/api'
 
 axios.interceptors.response.use(async response=>{
     try {
-        await sleep(1000);
+        await sleep(100);
         return response;
     } catch (error) {
         console.log(error);
