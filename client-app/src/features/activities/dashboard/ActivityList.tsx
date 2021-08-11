@@ -1,8 +1,8 @@
 import { observer } from "mobx-react-lite";
 import React, { SyntheticEvent } from "react";  
 import { useState } from "react";
-import { Button, Grid, Item, ItemMeta, Label, List, Segment }  from "semantic-ui-react";
-import { Activity } from "../../../app/models/activity";
+import { Link } from "react-router-dom";
+import { Button,  Item,  Label,  Segment }  from "semantic-ui-react";
 import { useStore } from "../../../app/store/store";
 
 export default observer(function ActivityList(){
@@ -32,7 +32,7 @@ export default observer(function ActivityList(){
                             <div>{activity.city}, {activity.venue}</div>
                         </Item.Description>
                         <Item.Extra>
-                            <Button onClick={() => activityStore.selectActivity(activity.id)} floated='right' content='View' color='blue'/>
+                            <Button as={Link} to={`/activities/${activity.id}`} floated='right' content='View' color='blue'/>
                             <Button 
                                 name={activity.id}
                                 loading={loadding && target === activity.id} 
