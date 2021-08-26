@@ -5,19 +5,30 @@ using AutoMapper;
 using Domain;
 using MediatR;
 using Persistence;
+using FluentValidation;
+using Application.Core;
 
 namespace Application.Activities
 {
     public class Create
     {
-        public class Command : IRequest
+        public class Command : IRequest<Result<Unit>>
         {
             public ActivityRequest Activity { get; set; }
         }
 
-        public class Handler : IRequestHandler<Command>
+        public class CommandValidator : AbstractValidator<Command>
         {
-           private readonly DataContext context;
+            public CommandValidator()
+            {
+                RuleFor(x => x.Activity).SetValidator(new ActivityValidator());
+            }
+
+
+        }
+        public class Handler : IRequestHandler<Command, Result<Unit>>
+        {
+            private readonly DataContext context;
             private readonly IMapper mapper;
             public Handler(DataContext context, IMapper mapper)
             {
@@ -25,13 +36,15 @@ namespace Application.Activities
                 this.context = context;
             }
 
-            public async Task<Unit> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
             {
                 context.Activities.Add(Create(request.Activity));   
 
-                await context.SaveChangesAsync(cancellationToken);
+                var result = await context.SaveChangesAsync(cancellationToken) > 0;
+             
+                if (!result) Result<Unit>.Failure("Fails to create activity");
 
-                return Unit.Value;
+                return Result<Unit>.Success(Unit.Value);
             }
 
             private Activity Create(ActivityRequest request)  => Activity.Create(request.Title, 

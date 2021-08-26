@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Application.Core;
 using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,9 @@ namespace Application.Activities
 {
     public class List
     {
-        public class Query : IRequest<IEnumerable<Activity>> {}
+        public class Query : IRequest<Result<IEnumerable<Activity>>> {}
 
-        public class Handler : IRequestHandler<Query, IEnumerable<Activity>>
+        public class Handler : IRequestHandler<Query, Result<IEnumerable<Activity>>>
         {
             private readonly DataContext _context;
             public Handler(DataContext context)
@@ -21,8 +22,8 @@ namespace Application.Activities
                 _context = context;
             }
 
-            public async Task<IEnumerable<Activity>> Handle(Query request, CancellationToken cancellationToken)
-                => await _context.Activities.ToListAsync(cancellationToken);
+            public async Task<Result<IEnumerable<Activity>>> Handle(Query request, CancellationToken cancellationToken)
+                => Result<IEnumerable<Activity>>.Success(await _context.Activities.ToListAsync(cancellationToken));
         }
     }
 }
