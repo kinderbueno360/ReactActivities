@@ -10,6 +10,8 @@ import ActivityForm from '../../features/activities/form/ActivityForm';
 import ActivityDetails from '../../features/activities/details/ActivityDetails';
 import { ToastContainer } from 'react-toastify';
 import NotFound from '../../features/errors/NotFound';
+import ServerError from '../../features/errors/ServerError';
+import TestErrors from '../../features/errors/TestErrors';
 
 function App() {
   const location = useLocation();
@@ -28,6 +30,8 @@ function App() {
                 <Route exact path="/activities" component={ActivityDashboard} />
                 <Route path="/activities/:id" component={ActivityDetails} />
                 <Route key={location.key} path={['/createActivity', '/manage/:id']} component={ActivityForm} />
+                <Route path='/errors' component={TestErrors} />
+                <Route path='/server-error'  component={ServerError} />
                 <Route component={NotFound} />
               </Switch>
             </Container>

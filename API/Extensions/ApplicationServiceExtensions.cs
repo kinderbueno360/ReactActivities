@@ -25,7 +25,7 @@ namespace API
                                 policy
                                 .AllowAnyMethod()
                                 .AllowAnyHeader()
-                                .WithOrigins("http://localhost:3000");
+                                .AllowAnyOrigin();
                             });
                         })
                         .AddMediatR(typeof(List.Handler).Assembly)
