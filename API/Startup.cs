@@ -18,6 +18,8 @@ using Application.Activities;
 using Application.Core;
 using FluentValidation.AspNetCore;
 using API.Middleware;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
 namespace API
 {
@@ -37,22 +39,27 @@ namespace API
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
             })
-                        .AddDbContext<DataContext>(opt => {
-                            opt.UseSqlite(_config.GetConnectionString("DefaultConnection"));
-                        })
-                        .AddCors(opt => {
-                            opt.AddPolicy("CorsPolicy", policy =>
-                            {
-                                policy
-                                .AllowAnyMethod()
-                                .AllowAnyHeader()
-                                .AllowAnyOrigin();
-                            });
-                        })
-                        .AddMediatR(typeof(List.Handler).Assembly)
-                        .AddAutoMapper(typeof(MappingProfiles).Assembly);
+            .AddDbContext<DataContext>(opt => {
+                opt.UseSqlite(_config.GetConnectionString("DefaultConnection"));
+            })
+            .AddCors(opt => {
+                opt.AddPolicy("CorsPolicy", policy =>
+                {
+                    policy
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowAnyOrigin();
+                });
+            })
+            .AddMediatR(typeof(List.Handler).Assembly)
+            .AddAutoMapper(typeof(MappingProfiles).Assembly);
 
-            services.AddControllers()
+            services.AddIdentityServices(_config);
+            services.AddControllers(opt=> 
+                    {
+                        var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+                        opt.Filters.Add(new AuthorizeFilter(policy));
+                    })
                     .AddFluentValidation(config=> {
                         config.RegisterValidatorsFromAssemblyContaining<Create>();
                     });
@@ -77,6 +84,8 @@ namespace API
             app.UseRouting();
 
             app.UseCors("CorsPolicy");
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 

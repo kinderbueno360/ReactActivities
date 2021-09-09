@@ -5,6 +5,7 @@ using Application.Activities;
 using Application.Core;
 using Application.Request;
 using Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static Application.Activities.Create;
 
