@@ -20,6 +20,8 @@ using FluentValidation.AspNetCore;
 using API.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Application;
+using Infrastructure;
 
 namespace API
 {
@@ -52,7 +54,8 @@ namespace API
                 });
             })
             .AddMediatR(typeof(List.Handler).Assembly)
-            .AddAutoMapper(typeof(MappingProfiles).Assembly);
+            .AddAutoMapper(typeof(MappingProfiles).Assembly)
+            .AddScoped<IUserAccessor, UserAccessor>();
 
             services.AddIdentityServices(_config);
             services.AddControllers(opt=> 

@@ -1,12 +1,13 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Application.Request;
+using Application;
 using AutoMapper;
 using Domain;
 using MediatR;
 using Persistence;
 using FluentValidation;
 using Application.Core;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Activities
 {
@@ -29,16 +30,29 @@ namespace Application.Activities
         public class Handler : IRequestHandler<Command, Result<Unit>>
         {
             private readonly DataContext context;
+            private readonly IUserAccessor userAccessor;
             private readonly IMapper mapper;
-            public Handler(DataContext context, IMapper mapper)
+            public Handler(DataContext context, IUserAccessor userAccessor, IMapper mapper)
             {
                 this.mapper = mapper;
                 this.context = context;
+                this.userAccessor = userAccessor;
             }
 
             public async Task<Result<Unit>> Handle(Command request, CancellationToken cancellationToken)
             {
-                context.Activities.Add(Create(request.Activity));   
+                var user = await  context.Users.FirstOrDefaultAsync(x => x.UserName == userAccessor.GetUserName());
+
+                var attendee = new ActivityAttendee
+                {
+                    AppUser = user,
+                    Activity = Create(request.Activity),
+                    IsHost = true
+                };
+
+                var activity = Create(request.Activity);
+                activity.Attendees.Add(attendee);
+                context.Activities.Add(activity);   
 
                 var result = await context.SaveChangesAsync(cancellationToken) > 0;
              

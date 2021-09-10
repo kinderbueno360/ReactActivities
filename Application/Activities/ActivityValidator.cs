@@ -1,5 +1,4 @@
-﻿using Application.Request;
-using FluentValidation;
+﻿using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
