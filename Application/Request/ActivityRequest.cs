@@ -26,6 +26,7 @@ namespace Application
         public string City { get; set; }
         public string Venue { get; set; }
 
+        public bool IsCanceled { get; set; }
         public string HostUserName { get; set; }
         public ICollection<Profile> Attendees { get; set; }
 
