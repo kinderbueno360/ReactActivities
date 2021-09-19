@@ -8,6 +8,7 @@ namespace API.Controllers
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using System;
+    using System.Linq;
     using System.Security.Claims;
     using System.Threading.Tasks;
 
@@ -29,8 +30,8 @@ namespace API.Controllers
 
         [HttpPost("login")]
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
-            => await (await userManager
-                            .FindByEmailAsync(loginDto.Email))
+            => await (await userManager.Users.Include(p=>p.Photos)
+                            .FirstOrDefaultAsync(x=>x.Email == loginDto.Email))
                             .LoginHandle(signInManager, Unauthorized, tokenService.CreateToken, loginDto.Password);
         
         
@@ -62,8 +63,8 @@ namespace API.Controllers
         [Authorize]
         [HttpGet]
         public async Task<ActionResult<UserDto>> GetCurrentUser()
-            => (await userManager
-                            .FindByEmailAsync(User.FindFirstValue(ClaimTypes.Email)))
+            => (await userManager.Users.Include(p => p.Photos)
+                            .FirstOrDefaultAsync(x => x.Email == User.FindFirstValue(ClaimTypes.Email)))
                             .ToUserDto(tokenService.CreateToken);
 
         
@@ -94,7 +95,7 @@ namespace API.Controllers
             => new UserDto
                     {
                         DisplayName = user.DisplayName,
-                        Image = null,
+                        Image = user?.Photos?.FirstOrDefault(x=>x.IsMain)?.Url,
                         Token = tokenFunc(user),
                         UserName = user.UserName
                     };

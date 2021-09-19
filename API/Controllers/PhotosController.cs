@@ -17,5 +17,10 @@ namespace API.Controllers
         [HttpDelete("id")]
         public async Task<IActionResult> Delete(string Id)
             => HandleResult(await Mediator.Send(new Delete.Command { Id = Id  }));
+
+
+        [HttpPost("{id}/setMain")]
+        public async Task<IActionResult> SetMain(string id)
+            => HandleResult(await Mediator.Send(new SetMain.Command { Id = id }));
     }
 }
