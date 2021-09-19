@@ -11,6 +11,8 @@ namespace Persistence
 
         public DbSet<ActivityAttendee> ActivityAttendees { get; set; }
 
+        public DbSet<Photo> Photos{ get; set; }
+
         public DataContext(DbContextOptions options) : base(options)
         {
 

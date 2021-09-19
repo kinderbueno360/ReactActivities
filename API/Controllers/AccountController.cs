@@ -7,6 +7,7 @@ namespace API.Controllers
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
+    using System;
     using System.Security.Claims;
     using System.Threading.Tasks;
 
@@ -28,21 +29,11 @@ namespace API.Controllers
 
         [HttpPost("login")]
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
-        {
-            var user = await userManager.FindByEmailAsync(loginDto.Email);
-
-            if (user == null) return Unauthorized();
-
-            var result = await signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
-
-            if (result.Succeeded)
-            {
-                return CreateUserObject(user);
-            }
-
-            return Unauthorized();
-        }
-
+            => await (await userManager
+                            .FindByEmailAsync(loginDto.Email))
+                            .LoginHandle(signInManager, Unauthorized, tokenService.CreateToken, loginDto.Password);
+        
+        
         [HttpPost("register")]
         public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
         {
@@ -64,32 +55,49 @@ namespace API.Controllers
                 UserName = registerDto.UserName,
             };
 
-            var result = await userManager.CreateAsync(user, registerDto.Password);
-
-            if (result.Succeeded)
-            {
-                return CreateUserObject(user);
-            }
-
-            return BadRequest("Problem registering user");
-
+            return (await userManager.CreateAsync(user, registerDto.Password))
+                        .RegisterResult(user, tokenService.CreateToken, BadRequest);
         }
 
         [Authorize]
         [HttpGet]
-        public async Task<ActionResult<UserDto>> GetCurrentUser() 
-        {
-            var user = await userManager.FindByEmailAsync(User.FindFirstValue(ClaimTypes.Email));
+        public async Task<ActionResult<UserDto>> GetCurrentUser()
+            => (await userManager
+                            .FindByEmailAsync(User.FindFirstValue(ClaimTypes.Email)))
+                            .ToUserDto(tokenService.CreateToken);
 
-            return CreateUserObject(user);
-        }
+        
+        
+    }
+    public static class AccountControllerExtensions
+    {
+        public static async Task<ActionResult<UserDto>> LoginHandle(this AppUser user, SignInManager<AppUser> signInManager, Func<ActionResult> unauthorizedFunc, Func<AppUser, string> tokenFunc, string password) =>
+            (user == null)
+                ? unauthorizedFunc()
+                : await signInManager
+                                .CheckPasswordSignInAsync(user, password, false)
+                                .LoginResult(user,tokenFunc, unauthorizedFunc);
 
-        private UserDto CreateUserObject(AppUser user)  => new UserDto
-        {
-            DisplayName = user.DisplayName,
-            Image = null,
-            Token = tokenService.CreateToken(user),
-            UserName = user.UserName
-        };
+
+        public static ActionResult<UserDto> RegisterResult(this IdentityResult result, AppUser user , Func<AppUser, string> tokenFunc, Func<string, ActionResult> resultFunc ) 
+            => (result.Succeeded) ?  
+                    user.ToUserDto(tokenFunc) :
+                    resultFunc("Problem registering user");
+
+        public static async Task<ActionResult<UserDto>> LoginResult(this Task<Microsoft.AspNetCore.Identity.SignInResult> result, AppUser user, Func<AppUser, string> tokenFunc, Func<ActionResult> resultFunc)
+            => ((await result).Succeeded) ?
+                    user.ToUserDto(tokenFunc) :
+                    resultFunc();
+
+
+        public static UserDto ToUserDto(this AppUser user, Func<AppUser, string> tokenFunc) 
+            => new UserDto
+                    {
+                        DisplayName = user.DisplayName,
+                        Image = null,
+                        Token = tokenFunc(user),
+                        UserName = user.UserName
+                    };
+
     }
 }

@@ -22,6 +22,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Application;
 using Infrastructure;
+using Application.Interfaces;
+using Infrastructure.Photos;
 
 namespace API
 {
@@ -55,7 +57,9 @@ namespace API
             })
             .AddMediatR(typeof(List.Handler).Assembly)
             .AddAutoMapper(typeof(MappingProfiles).Assembly)
-            .AddScoped<IUserAccessor, UserAccessor>();
+            .AddScoped<IUserAccessor, UserAccessor>()
+            .Configure<CloudinarySettings>(_config.GetSection("Cloudinary"))
+            .AddScoped<IPhotoAccessor, PhotoAccessor>();
 
             services.AddIdentityServices(_config);
             services.AddControllers(opt=> 
